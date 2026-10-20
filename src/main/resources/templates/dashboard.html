@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Executive Telemetry Dashboard')}"></head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside th:replace="~{fragments/layout :: sidebar('dashboard')}"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <!-- Top Navbar -->
+        <header th:replace="~{fragments/layout :: navbar('Executive Telemetry Dashboard')}"></header>
+
+        <div class="content-area">
+            <!-- Alert Toasts -->
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <!-- Page Title Header -->
+            <div class="page-header">
+                <div class="page-heading">
+                    <h2>SLTC IT Infrastructure & Asset Telemetry</h2>
+                    <p>Real-time inventory governance, hardware compute distribution, and fleet readiness across university campuses.</p>
+                </div>
+                <div class="page-actions">
+                    <a th:href="@{/assets}" class="btn btn-secondary" id="btnQuickAssets">
+                        <i class="fa-solid fa-list"></i> Full Inventory
+                    </a>
+                    <a th:href="@{/handovers}" class="btn btn-primary" id="btnQuickHandover">
+                        <i class="fa-solid fa-signature"></i> Issue Voucher
+                    </a>
+                </div>
+            </div>
+
+            <!-- KPI Stats Grid -->
+            <div class="stats-grid">
+                <!-- Card 1: Total Assets -->
+                <div class="stat-card" id="cardTotalAssets">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Registry Assets</span>
+                        <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    </div>
+                    <div class="stat-value" th:text="${stats.totalAssets}">21</div>
+                    <div class="stat-meta">
+                        <i class="fa-solid fa-microchip" style="color: var(--cyan);"></i>
+                        <span th:text="${stats.computeUnits} + ' Core Compute Units'">15 Compute Units</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Available in Vault -->
+                <div class="stat-card emerald" id="cardAvailableAssets">
+                    <div class="stat-header">
+                        <span class="stat-title">Vault Depository (Ready)</span>
+                        <div class="stat-icon"><i class="fa-solid fa-vault"></i></div>
+                    </div>
+                    <div class="stat-value" style="color: var(--emerald);" th:text="${stats.availableAssets}">14</div>
+                    <div class="stat-meta">
+                        <i class="fa-solid fa-circle-check" style="color: var(--emerald);"></i>
+                        <span>Ready for staff/lab dispatch</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Active Custody & Transferred -->
+                <div class="stat-card amber" id="cardActiveCustody">
+                    <div class="stat-header">
+                        <span class="stat-title">In Active Circulation</span>
+                        <div class="stat-icon"><i class="fa-solid fa-handshake"></i></div>
+                    </div>
+                    <div class="stat-value" style="color: var(--amber);" th:text="${stats.activeAssets + stats.transferredAssets}">4</div>
+                    <div class="stat-meta">
+                        <i class="fa-solid fa-users" style="color: var(--amber);"></i>
+                        <span th:text="${stats.transferredAssets} + ' Handed over with sign token'">2 Handed over</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Exam Quarantine Pool -->
+                <div class="stat-card purple" id="cardExamQuarantine">
+                    <div class="stat-header">
+                        <span class="stat-title">Exam Quarantine Buffer</span>
+                        <div class="stat-icon"><i class="fa-solid fa-shield-virus"></i></div>
+                    </div>
+                    <div class="stat-value" style="color: var(--purple);" th:text="${stats.examQuarantineUnits}">3</div>
+                    <div class="stat-meta">
+                        <i class="fa-solid fa-graduation-cap" style="color: var(--purple);"></i>
+                        <span>Pre-configured Exam OS Image</span>
+                    </div>
+                </div>
+
+                <!-- Card 5: Antivirus Compliance -->
+                <div class="stat-card" id="cardAntivirusCompliance">
+                    <div class="stat-header">
+                        <span class="stat-title">Kaspersky Compliance</span>
+                        <div class="stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    </div>
+                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.antivirusComplianceRate, 1, 1)} + '%'">92.5%</div>
+                    <div class="stat-meta">
+                        <i class="fa-solid fa-circle-check" style="color: var(--emerald);"></i>
+                        <span th:text="${stats.antivirusActivated} + ' protected units'">18 protected</span>
+                    </div>
+                </div>
+
+                <!-- Card 6: Faulty / Repair Needed -->
+                <div class="stat-card rose" id="cardFaultyAssets">
+                    <div class="stat-header">
+                        <span class="stat-title">Bench Diagnosis / Fault</span>
+                        <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    </div>
+                    <div class="stat-value" style="color: var(--rose);" th:text="${stats.faultyAssets}">1</div>
+                    <div class="stat-meta">
+                        <i class="fa-solid fa-screwdriver-wrench" style="color: var(--rose);"></i>
+                        <span>Requires technician bench servicing</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Column Dashboard Layout -->
+            <div class="dashboard-row">
+                <!-- Column 1: Recent Custody Handover Ledger -->
+                <div class="content-card" id="cardRecentHandovers">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>Recent Equipment Handovers & Custody Audit Trail</span>
+                        </div>
+                        <a th:href="@{/handovers}" class="btn btn-secondary btn-sm">View All Vouchers</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="tableRecentHandovers">
+                            <thead>
+                                <tr>
+                                    <th>Asset Tag</th>
+                                    <th>Model</th>
+                                    <th>Custodian</th>
+                                    <th>Handover Date</th>
+                                    <th>Digital Token</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="log : ${recentHandovers}">
+                                    <td>
+                                        <strong style="color: #fff;" th:text="${log.assetTag}">NEX-LP-BAIT01</strong>
+                                    </td>
+                                    <td th:text="${log.assetModel}">Acer Aspire Go 14</td>
+                                    <td>
+                                        <div style="font-weight: 600; color: #fff;" th:text="${log.custodianName}">Kavindu Senanayake</div>
+                                        <div style="font-size: 11px; color: var(--text-muted);" th:text="${log.staffOrStudentId != null ? log.staffOrStudentId : log.department}">BAIT-2023-042</div>
+                                    </td>
+                                    <td th:text="${log.handoverDate}">2026-10-15</td>
+                                    <td>
+                                        <span class="crypto-token copyable" th:data-copy="${log.digitalSignToken}" th:title="'Click to copy'">
+                                            <i class="fa-solid fa-key" style="font-size: 10px;"></i>
+                                            <span th:text="${log.digitalSignToken}">NEX-SIGN-9A2E7F1C</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${log.status.name() == 'ACTIVE'}" class="badge badge-transfer">
+                                            <span class="badge-dot"></span> On Loan
+                                        </span>
+                                        <span th:if="${log.status.name() == 'RETURNED'}" class="badge badge-available">
+                                            <span class="badge-dot"></span> Returned
+                                        </span>
+                                        <span th:if="${log.status.name() == 'OVERDUE'}" class="badge badge-faulty">
+                                            <span class="badge-dot"></span> Overdue
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(recentHandovers)}">
+                                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                        No recent handovers recorded.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Column 2: Campus & Device Distribution -->
+                <div class="content-card" id="cardDistribution">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            <span>Campus Deployment</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.05em;">Geographic Location</h4>
+                        <div th:each="entry : ${stats.locationDistribution}" class="dist-item">
+                            <div class="dist-meta">
+                                <span style="color: var(--text-primary);" th:text="${#strings.replace(entry.key, '_', ' ')}">Padukka Main</span>
+                                <span style="color: var(--cyan);" th:text="${entry.value} + ' Units'">18 Units</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" th:style="'width: ' + ${(entry.value * 100.0) / (stats.totalAssets > 0 ? stats.totalAssets : 1)} + '%;'"></div>
+                            </div>
+                        </div>
+
+                        <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-top: 24px; margin-bottom: 12px; letter-spacing: 0.05em;">Device Classification</h4>
+                        <div th:each="entry : ${stats.deviceTypeDistribution}" class="dist-item">
+                            <div class="dist-meta">
+                                <span style="color: var(--text-primary);" th:text="${#strings.replace(entry.key, '_', ' ')}">LAPTOP</span>
+                                <span style="color: var(--primary);" th:text="${entry.value} + ' Units'">12 Units</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill purple" th:style="'width: ' + ${(entry.value * 100.0) / (stats.totalAssets > 0 ? stats.totalAssets : 1)} + '%;'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Access Modules Banner -->
+            <div class="lab-header-banner" style="margin-bottom: 0;">
+                <div>
+                    <h3 style="font-size: 20px; font-weight: 700; color: #fff;">Operational Hardware Management Portals</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">Jump directly into dedicated fleet tracking and physical laboratory seat matrix.</p>
+                </div>
+                <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+                    <a th:href="@{/fleet}" class="btn btn-primary" id="btnGoFleet">
+                        <i class="fa-solid fa-laptop"></i> Acer Aspire Fleet Tracker
+                    </a>
+                    <a th:href="@{/labs}" class="btn btn-secondary" id="btnGoLabs">
+                        <i class="fa-solid fa-desktop"></i> Computer Lab 01 Matrix
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Scripts -->
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

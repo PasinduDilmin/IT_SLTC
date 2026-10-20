@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Custody & Handover Ledger')}"></head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside th:replace="~{fragments/layout :: sidebar('handovers')}"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <!-- Top Navbar -->
+        <header th:replace="~{fragments/layout :: navbar('Custody Voucher Ledger')}"></header>
+
+        <div class="content-area">
+            <!-- Alert Toasts -->
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-heading">
+                    <h2>Custody Handover Ledger & Cryptographic Vouchers</h2>
+                    <p>Cryptographic loan tracking, equipment checkout auditing, and return depository check-in.</p>
+                </div>
+                <div class="page-actions">
+                    <button type="button" class="btn btn-primary" data-modal-open="newHandoverModal" id="btnOpenNewHandoverModal">
+                        <i class="fa-solid fa-signature"></i> Issue New Voucher
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Handover Stats -->
+            <div class="stats-grid">
+                <div class="stat-card amber" id="cardHandoverActive">
+                    <div class="stat-header">
+                        <span class="stat-title">Active Loan Vouchers</span>
+                        <div class="stat-icon"><i class="fa-solid fa-handshake"></i></div>
+                    </div>
+                    <div class="stat-value" style="color: var(--amber);" th:text="${activeCount}">2</div>
+                    <div class="stat-meta">
+                        <span>Equipment currently in student/staff custody</span>
+                    </div>
+                </div>
+
+                <div class="stat-card emerald" id="cardHandoverReturned">
+                    <div class="stat-header">
+                        <span class="stat-title">Checked-in Returns</span>
+                        <div class="stat-icon"><i class="fa-solid fa-box-archive"></i></div>
+                    </div>
+                    <div class="stat-value" style="color: var(--emerald);" th:text="${returnedCount}">1</div>
+                    <div class="stat-meta">
+                        <span>Returned back to depository vault</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" id="cardHandoverTotal">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Vouchers Issued</span>
+                        <div class="stat-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                    </div>
+                    <div class="stat-value" th:text="${handovers.totalElements}">3</div>
+                    <div class="stat-meta">
+                        <span>All recorded loan transactions</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Master Handover Table Card -->
+            <div class="content-card" id="cardHandoverTable">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Custody Transaction Audit Ledger</span>
+                    </div>
+                    <div>
+                        <input type="text" id="tableLiveFilter" placeholder="Filter ledger records..." class="form-control" style="font-size: 12px; padding: 6px 12px; width: 220px;">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="tableHandoverLedger">
+                        <thead>
+                            <tr>
+                                <th>Digital Token</th>
+                                <th>Asset Assigned</th>
+                                <th>Custodian Details</th>
+                                <th>Campus & Dept</th>
+                                <th>Handover Date</th>
+                                <th>Return Target</th>
+                                <th>Accessories Included</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="log : ${handovers.content}">
+                                <td>
+                                    <span class="crypto-token copyable" th:data-copy="${log.digitalSignToken}" th:title="'Click to copy'">
+                                        <i class="fa-solid fa-key" style="font-size: 10px;"></i>
+                                        <span th:text="${log.digitalSignToken}">NEX-SIGN-9A2E7F1C</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a th:if="${log.assetId != null}" th:href="@{/assets/{id}(id=${log.assetId})}" style="color: #fff; font-weight: 700; text-decoration: none;" th:text="${log.assetTag}">
+                                        NEX-LP-BAIT01
+                                    </a>
+                                    <span th:if="${log.assetId == null}" style="color: #fff; font-weight: 700;" th:text="${log.assetTag}">NEX-LP-BAIT01</span>
+                                    <div style="font-size: 11px; color: var(--text-muted);" th:text="${log.assetModel}">Acer Aspire Go 14</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: #fff;" th:text="${log.custodianName}">Kavindu Senanayake</div>
+                                    <div style="font-size: 11px; color: var(--cyan);" th:text="${log.custodianEmail}">kavindu@sltc.ac.lk</div>
+                                    <div style="font-size: 10px; color: var(--text-muted);" th:text="${log.staffOrStudentId}">BAIT-2023-042</div>
+                                </td>
+                                <td>
+                                    <div th:text="${#strings.replace(log.targetCampus.name(), '_', ' ')}">PADUKKA MAIN</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);" th:text="${log.department}">Academic Affairs</div>
+                                </td>
+                                <td th:text="${log.handoverDate}">2026-10-15</td>
+                                <td>
+                                    <div th:text="${log.expectedReturnDate}">2026-10-25</div>
+                                    <div th:if="${log.actualReturnDate != null}" style="font-size: 11px; color: var(--emerald);" th:text="'Returned: ' + ${log.actualReturnDate}">
+                                        Returned: 2026-10-18
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-size: 12px; color: var(--text-secondary);" th:text="${log.accessories}">Adapter, Sleeve</span>
+                                </td>
+                                <td>
+                                    <span th:if="${log.status.name() == 'ACTIVE'}" class="badge badge-transfer">
+                                        <span class="badge-dot"></span> On Loan
+                                    </span>
+                                    <span th:if="${log.status.name() == 'RETURNED'}" class="badge badge-available">
+                                        <span class="badge-dot"></span> Returned
+                                    </span>
+                                    <span th:if="${log.status.name() == 'OVERDUE'}" class="badge badge-faulty">
+                                        <span class="badge-dot"></span> Overdue
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <button th:if="${log.status.name() == 'ACTIVE'}" 
+                                            type="button" 
+                                            class="btn btn-success btn-sm"
+                                            data-return-handover
+                                            th:data-id="${log.id}"
+                                            th:data-tag="${log.assetTag}"
+                                            th:data-custodian="${log.custodianName}">
+                                        <i class="fa-solid fa-check"></i> Check-in
+                                    </button>
+                                    <span th:if="${log.status.name() == 'RETURNED'}" style="font-size: 11px; color: var(--text-muted);">
+                                        <i class="fa-solid fa-lock"></i> Closed
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(handovers.content)}">
+                                <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                                    No handover vouchers recorded.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-wrapper" th:if="${handovers.totalPages > 1}">
+                    <div>
+                        Showing page <strong th:text="${handovers.number + 1}">1</strong> of <strong th:text="${handovers.totalPages}">2</strong>
+                    </div>
+                    <div class="pagination-controls">
+                        <a th:if="${handovers.hasPrevious()}" th:href="@{/handovers(page=${handovers.number - 1})}" class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-chevron-left"></i> Previous
+                        </a>
+                        <a th:if="${handovers.hasNext()}" th:href="@{/handovers(page=${handovers.number + 1})}" class="btn btn-secondary btn-sm">
+                            Next <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Modal 1: Issue New Custody Voucher -->
+<div class="modal-overlay" id="newHandoverModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fa-solid fa-signature" style="color: var(--primary);"></i> Issue Custody Voucher</h3>
+            <button type="button" class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form th:action="@{/handovers}" method="post">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label>Select Available Hardware Asset *</label>
+                        <select name="assetId" class="form-control" required>
+                            <option value="">-- Choose Equipment from Available Depository --</option>
+                            <option th:each="ast : ${availableAssets}" 
+                                    th:value="${ast.id}" 
+                                    th:text="${ast.assetTag} + ' • ' + ${ast.model} + ' (' + ${ast.serialNumber} + ')'">
+                                NEX-LP-BAIT01 - Acer Aspire Go 14
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Custodian Full Name *</label>
+                        <input type="text" name="custodianName" placeholder="e.g. Dr. Malinda Fernando" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Custodian Official Email *</label>
+                        <input type="email" name="custodianEmail" placeholder="e.g. malinda@sltc.ac.lk" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Staff / Student ID</label>
+                        <input type="text" name="staffOrStudentId" placeholder="e.g. STF-IT-104 or BAIT-2023-011" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Campus Destination *</label>
+                        <select name="targetCampus" class="form-control" required>
+                            <option th:each="cp : ${campuses}" th:value="${cp}" th:text="${#strings.replace(cp.name(), '_', ' ')}">PADUKKA_MAIN</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Department</label>
+                        <input type="text" name="department" placeholder="e.g. School of Computing / IT Dept" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Handover Date *</label>
+                        <input type="date" name="handoverDate" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Expected Return Date</label>
+                        <input type="date" name="expectedReturnDate" class="form-control">
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Accessories Dispatched</label>
+                        <input type="text" name="accessories" value="Acer 65W Type-C AC Adapter, Padded Carry Bag" class="form-control">
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Authorization Memo / Loan Purpose</label>
+                        <textarea name="memo" rows="2" placeholder="e.g. Temporary loan for overseas research symposium and thesis coding" class="form-control"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-file-signature"></i> Sign & Issue Voucher</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal 2: Return Handover Check-in -->
+<div class="modal-overlay" id="returnModal">
+    <div class="modal-dialog" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fa-solid fa-box-archive" style="color: var(--emerald);"></i> Depository Check-in</h3>
+            <button type="button" class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form method="post" id="returnHandoverForm">
+            <div class="modal-body">
+                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+                    Confirming check-in return for equipment: <strong id="returnModalTargetText" style="color: #fff;">Asset</strong>
+                </p>
+                <div class="form-group">
+                    <label>Inspection Notes / Physical Condition</label>
+                    <textarea name="notes" rows="3" placeholder="e.g. Returned in pristine condition, original 65W adapter & bag verified" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Check-in to Vault</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

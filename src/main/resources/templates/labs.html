@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Computer Lab 01 Seat Matrix & Fleet')}"></head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside th:replace="~{fragments/layout :: sidebar('labs')}"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <!-- Top Navbar -->
+        <header th:replace="~{fragments/layout :: navbar('Computer Laboratory 01 Infrastructure')}"></header>
+
+        <div class="content-area">
+            <!-- Alert Toasts -->
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-heading">
+                    <h2>Computer Laboratory 01 & DAIT Fleet</h2>
+                    <p>Padukka Main Campus (Bldg B • Room L1-04) — Physical workstation bench matrix and network pairing topology.</p>
+                </div>
+            </div>
+
+            <!-- Lab Hardware & Network Telemetry Banner -->
+            <div class="lab-header-banner">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                        <span class="badge badge-available"><i class="fa-solid fa-circle-check"></i> Lab Status: 100% Operational</span>
+                        <span class="badge badge-active" style="font-family: var(--font-mono); font-size: 11px;">VLAN 140 • 1.0 Gbps</span>
+                    </div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #fff;" th:text="${stats.labName}">Computer Laboratory 01 & DAIT Hardware Fleet</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;" th:text="${stats.campus}">Padukka Main Campus (Bldg B • Room L1-04)</p>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 36px; font-weight: 800; color: var(--cyan); line-height: 1;" th:text="${stats.totalStations}">6</div>
+                    <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Workstations Paired</div>
+                </div>
+
+                <!-- Hardware Specifications Bar -->
+                <div class="lab-specs-grid" style="width: 100%;">
+                    <div class="spec-pill">
+                        <span>Workstation Compute Model</span>
+                        <strong th:text="${stats.workstationModel}">Acer Veriton S2720G</strong>
+                    </div>
+                    <div class="spec-pill">
+                        <span>Processor & Memory</span>
+                        <strong th:text="${stats.cpuSpecs}">Intel Core i7-14700 • 16GB DDR5</strong>
+                    </div>
+                    <div class="spec-pill">
+                        <span>Display Setup</span>
+                        <strong th:text="${stats.displaySpecs}">Acer 27" Full HD Monitor</strong>
+                    </div>
+                    <div class="spec-pill">
+                        <span>Network Gateway & AP</span>
+                        <strong style="color: var(--emerald);" th:text="${stats.uplink}">Aruba WAC 303 (1.0 Gbps)</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row Filter Pills Toolbar -->
+            <div class="toolbar-card" style="padding: 14px 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-right: 6px;">Row Filter:</span>
+                    <a th:href="@{/labs}" 
+                       class="btn btn-sm" 
+                       th:classappend="${selectedRow == 'all' || selectedRow == null ? 'btn-primary' : 'btn-secondary'}">
+                        All Benches
+                    </a>
+                    <a th:href="@{/labs(row='row-1')}" 
+                       class="btn btn-sm" 
+                       th:classappend="${selectedRow == 'row-1' ? 'btn-primary' : 'btn-secondary'}">
+                        Bench Row 1
+                    </a>
+                    <a th:href="@{/labs(row='row-2')}" 
+                       class="btn btn-sm" 
+                       th:classappend="${selectedRow == 'row-2' ? 'btn-primary' : 'btn-secondary'}">
+                        Bench Row 2
+                    </a>
+                    <a th:href="@{/labs(row='row-3')}" 
+                       class="btn btn-sm" 
+                       th:classappend="${selectedRow == 'row-3' ? 'btn-primary' : 'btn-secondary'}">
+                        Bench Row 3
+                    </a>
+                </div>
+            </div>
+
+            <!-- Visual Physical Bench Matrix -->
+            <div th:each="rowEntry : ${matrix}" class="bench-row-section">
+                <div class="bench-row-title">
+                    <i class="fa-solid fa-server"></i>
+                    <span th:text="${rowEntry.key}">Row 1</span>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;" th:text="'(' + ${rowEntry.value.size()} + ' Workstation Terminals)'">(2 Terminals)</span>
+                </div>
+
+                <div class="stations-grid">
+                    <div th:each="st : ${rowEntry.value}" class="station-node">
+                        <div class="station-header">
+                            <div>
+                                <span class="station-id" th:text="${st.stationId}">R1-S01</span>
+                                <div style="font-size: 12px; color: var(--text-muted);" th:text="${st.stationName}">Row 1 Station 01</div>
+                            </div>
+                            <span class="badge badge-available">
+                                <span class="badge-dot"></span> Online
+                            </span>
+                        </div>
+
+                        <div style="margin: 12px 0; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: var(--radius-sm); border-left: 2px solid var(--cyan);">
+                            <div class="station-meta-row">
+                                <span style="color: var(--text-muted);">IP Address:</span>
+                                <span class="font-mono" style="color: var(--cyan);" th:text="${st.ipAddress}">10.20.14.101</span>
+                            </div>
+                            <div class="station-meta-row">
+                                <span style="color: var(--text-muted);">PC Serial:</span>
+                                <span class="font-mono copyable" th:data-copy="${st.pcSerial}" th:text="${st.pcSerial}">DTV2XSG...</span>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
+                            <div><i class="fa-solid fa-tv" style="color: var(--text-muted); width: 14px;"></i> <span th:text="${st.monitorModel}">Acer EK271</span> (<span class="font-mono" th:text="${st.monitorSerial}">MON-01</span>)</div>
+                            <div><i class="fa-solid fa-microchip" style="color: var(--text-muted); width: 14px;"></i> <span th:text="${st.processor}">Core i7-14700</span> • <span th:text="${st.ram}">16GB</span> • <span th:text="${st.storage}">512GB NVMe</span></div>
+                            <div><i class="fa-brands fa-windows" style="color: var(--text-muted); width: 14px;"></i> <span th:text="${st.osVersion}">Win 11 Pro 23H2 Domain</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fallback if empty -->
+            <div th:if="${#maps.isEmpty(matrix)}" class="content-card" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                <i class="fa-solid fa-desktop" style="font-size: 40px; margin-bottom: 12px; display: block;"></i>
+                No lab stations found matching the filter.
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Asset Registry Inventory')}"></head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside th:replace="~{fragments/layout :: sidebar('assets')}"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <!-- Top Navbar -->
+        <header th:replace="~{fragments/layout :: navbar('Master Asset Registry')}"></header>
+
+        <div class="content-area">
+            <!-- Alert Toasts -->
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-heading">
+                    <h2>SLTC Master Asset Registry</h2>
+                    <p>Centralized lifecycle governance of university IT equipment, serial tagging, and custodian allocations.</p>
+                </div>
+                <div class="page-actions">
+                    <button type="button" class="btn btn-primary" data-modal-open="newAssetModal" id="btnOpenNewAssetModal">
+                        <i class="fa-solid fa-plus"></i> Register New Asset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter & Search Toolbar -->
+            <div class="toolbar-card">
+                <form th:action="@{/assets}" method="get" class="filter-form" id="assetFilterForm">
+                    <!-- Search Input -->
+                    <div class="search-input-group">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" name="search" th:value="${search}" placeholder="Search tag, serial, model, custodian..." class="form-control" id="searchQueryInput">
+                    </div>
+
+                    <!-- Status Filter -->
+                    <select name="status" class="form-control" id="filterStatus">
+                        <option value="">All Statuses</option>
+                        <option th:each="st : ${statuses}" 
+                                th:value="${st}" 
+                                th:text="${st.name()}"
+                                th:selected="${selectedStatus != null && selectedStatus.name() == st.name()}">AVAILABLE</option>
+                    </select>
+
+                    <!-- Campus Filter -->
+                    <select name="campus" class="form-control" id="filterCampus">
+                        <option value="">All Campuses</option>
+                        <option th:each="cp : ${campuses}" 
+                                th:value="${cp}" 
+                                th:text="${#strings.replace(cp.name(), '_', ' ')}"
+                                th:selected="${selectedCampus != null && selectedCampus.name() == cp.name()}">PADUKKA_MAIN</option>
+                    </select>
+
+                    <!-- Device Type Filter -->
+                    <select name="deviceType" class="form-control" id="filterDeviceType">
+                        <option value="">All Device Types</option>
+                        <option th:each="dt : ${deviceTypes}" 
+                                th:value="${dt}" 
+                                th:text="${dt.name()}"
+                                th:selected="${selectedDeviceType != null && selectedDeviceType.name() == dt.name()}">LAPTOP</option>
+                    </select>
+
+                    <button type="submit" class="btn btn-secondary btn-sm" id="btnApplyFilter">
+                        <i class="fa-solid fa-filter"></i> Filter
+                    </button>
+                    <a th:href="@{/assets}" class="btn btn-secondary btn-sm" id="btnResetFilter" title="Reset Filters">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                </form>
+
+                <!-- Live Client-side table filter input -->
+                <div style="min-width: 180px;">
+                    <input type="text" id="tableLiveFilter" placeholder="Quick page filter..." class="form-control" style="font-size: 12px; padding: 7px 12px;">
+                </div>
+            </div>
+
+            <!-- Asset Registry Table Card -->
+            <div class="content-card" id="cardAssetTable">
+                <div class="table-responsive">
+                    <table class="data-table" id="tableAssetRegistry">
+                        <thead>
+                            <tr>
+                                <th>Asset Tag</th>
+                                <th>Serial Number</th>
+                                <th>Model & Type</th>
+                                <th>Campus / Location</th>
+                                <th>Custodian</th>
+                                <th>Antivirus</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="asset : ${assets.content}">
+                                <td>
+                                    <a th:href="@{/assets/{id}(id=${asset.id})}" style="color: #fff; font-weight: 700; text-decoration: none;" th:text="${asset.assetTag}">
+                                        NEX-LP-BAIT01
+                                    </a>
+                                    <div th:if="${asset.unitIdentifier != null}" style="font-size: 11px; color: var(--cyan);" th:text="${asset.unitIdentifier}">#01</div>
+                                </td>
+                                <td>
+                                    <span class="font-mono copyable" th:data-copy="${asset.serialNumber}" th:text="${asset.serialNumber}" title="Click to copy">
+                                        NXJ0LSG00243403CC62N00
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: var(--text-primary);" th:text="${asset.model}">Acer Aspire Go 14</div>
+                                    <span class="badge badge-secondary" style="font-size: 10px;" th:text="${asset.deviceType}">LAPTOP</span>
+                                </td>
+                                <td>
+                                    <div style="color: var(--text-primary);" th:text="${#strings.replace(asset.campusLocation.name(), '_', ' ')}">PADUKKA MAIN</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);" th:text="${asset.specificLocation}">Depository Vault</div>
+                                </td>
+                                <td>
+                                    <div style="color: var(--text-primary); font-weight: 500;" th:text="${asset.currentCustodian}">Depository</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);" th:text="${asset.department}">IT Dept</div>
+                                </td>
+                                <td>
+                                    <span th:if="${asset.antivirusStatus != null && asset.antivirusStatus.name() == 'ACTIVATED'}" class="badge badge-available">
+                                        <i class="fa-solid fa-shield"></i> Activated
+                                    </span>
+                                    <span th:if="${asset.antivirusStatus != null && asset.antivirusStatus.name() == 'NOT_ACTIVATED'}" class="badge badge-faulty">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> Inactive
+                                    </span>
+                                    <span th:if="${asset.antivirusStatus == null || asset.antivirusStatus.name() == 'NOT_APPLICABLE'}" class="badge badge-secondary">
+                                        N/A
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:if="${asset.status.name() == 'AVAILABLE'}" class="badge badge-available">
+                                        <span class="badge-dot"></span> Available
+                                    </span>
+                                    <span th:if="${asset.status.name() == 'ACTIVE'}" class="badge badge-active">
+                                        <span class="badge-dot"></span> Active
+                                    </span>
+                                    <span th:if="${asset.status.name() == 'TRANSFER'}" class="badge badge-transfer">
+                                        <span class="badge-dot"></span> Handed Over
+                                    </span>
+                                    <span th:if="${asset.status.name() == 'QUARANTINE_EXAM'}" class="badge badge-quarantine">
+                                        <span class="badge-dot"></span> Exam Quarantine
+                                    </span>
+                                    <span th:if="${asset.status.name() == 'NOT_WORKING'}" class="badge badge-faulty">
+                                        <span class="badge-dot"></span> Not Working
+                                    </span>
+                                    <span th:if="${asset.status.name() == 'IN_TRANSIT'}" class="badge badge-transfer">
+                                        <span class="badge-dot"></span> In Transit
+                                    </span>
+                                    <span th:if="${asset.status.name() == 'DECOMMISSIONED'}" class="badge badge-secondary">
+                                        <span class="badge-dot"></span> Retired
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <div style="display: inline-flex; gap: 6px;">
+                                        <a th:href="@{/assets/{id}(id=${asset.id})}" class="btn btn-secondary btn-icon" title="View Dossier">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-secondary btn-icon" title="Edit Asset"
+                                                data-edit-asset
+                                                th:data-id="${asset.id}"
+                                                th:data-tag="${asset.assetTag}"
+                                                th:data-serial="${asset.serialNumber}"
+                                                th:data-model="${asset.model}"
+                                                th:data-status="${asset.status.name()}"
+                                                th:data-campus="${asset.campusLocation.name()}"
+                                                th:data-department="${asset.department}"
+                                                th:data-location="${asset.specificLocation}">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <form th:action="@{/assets/{id}/delete(id=${asset.id})}" method="post" style="display: inline;" onsubmit="return confirm('Confirm deletion of asset ' + [[${asset.assetTag}]] + '?');">
+                                            <button type="submit" class="btn btn-danger btn-icon" title="Delete Asset">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(assets.content)}">
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                                    <i class="fa-solid fa-box-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                                    No assets match the selected filters.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <div class="pagination-wrapper" th:if="${assets.totalPages > 1}">
+                    <div>
+                        Showing page <strong th:text="${assets.number + 1}">1</strong> of <strong th:text="${assets.totalPages}">3</strong> (<span th:text="${assets.totalElements}">21</span> total assets)
+                    </div>
+                    <div class="pagination-controls">
+                        <a th:if="${assets.hasPrevious()}" 
+                           th:href="@{/assets(page=${assets.number - 1}, search=${search}, status=${selectedStatus}, campus=${selectedCampus}, deviceType=${selectedDeviceType})}" 
+                           class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-chevron-left"></i> Previous
+                        </a>
+                        <a th:if="${assets.hasNext()}" 
+                           th:href="@{/assets(page=${assets.number + 1}, search=${search}, status=${selectedStatus}, campus=${selectedCampus}, deviceType=${selectedDeviceType})}" 
+                           class="btn btn-secondary btn-sm">
+                            Next <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal 1: Register New Asset -->
+<div class="modal-overlay" id="newAssetModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> Register New Asset</h3>
+            <button type="button" class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form th:action="@{/assets}" method="post">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Asset Tag *</label>
+                        <input type="text" name="assetTag" placeholder="e.g. NEX-LP-BAIT21" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Serial Number *</label>
+                        <input type="text" name="serialNumber" placeholder="e.g. NXJ0LSG00243403..." class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Model *</label>
+                        <input type="text" name="model" placeholder="e.g. Acer Aspire Go 14" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Device Type *</label>
+                        <select name="deviceType" class="form-control" required>
+                            <option th:each="dt : ${deviceTypes}" th:value="${dt}" th:text="${dt.name()}">LAPTOP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Initial Status *</label>
+                        <select name="status" class="form-control" required>
+                            <option th:each="st : ${statuses}" th:value="${st}" th:text="${st.name()}">AVAILABLE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Campus Location *</label>
+                        <select name="campusLocation" class="form-control" required>
+                            <option th:each="cp : ${campuses}" th:value="${cp}" th:text="${#strings.replace(cp.name(), '_', ' ')}">PADUKKA_MAIN</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Specific Location</label>
+                        <input type="text" name="specificLocation" placeholder="e.g. IT Depository Vault (Padukka)" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <input type="text" name="department" placeholder="e.g. IT Dept / Academic Affairs" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Processor</label>
+                        <input type="text" name="processor" placeholder="e.g. Intel Core i3-N305" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>RAM</label>
+                        <input type="text" name="ram" placeholder="e.g. 8GB LPDDR5" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Storage</label>
+                        <input type="text" name="storage" placeholder="e.g. 512GB PCIe NVMe" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Operating System</label>
+                        <input type="text" name="operatingSystem" placeholder="e.g. Win 11 Pro Edu Image" class="form-control">
+                    </div>
+                    <div class="form-group full">
+                        <label>Operational Notes</label>
+                        <textarea name="notes" rows="2" placeholder="e.g. Assigned to student fleet pool, exam OS ready" class="form-control"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Asset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal 2: Edit Asset -->
+<div class="modal-overlay" id="editAssetModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fa-solid fa-pen-to-square" style="color: var(--cyan);"></i> Edit Asset Specifications</h3>
+            <button type="button" class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form method="post" id="editAssetForm">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Asset Tag</label>
+                        <input type="text" name="assetTag" id="editAssetTag" class="form-control" readonly style="opacity: 0.7;">
+                    </div>
+                    <div class="form-group">
+                        <label>Serial Number</label>
+                        <input type="text" name="serialNumber" id="editSerialNumber" class="form-control" readonly style="opacity: 0.7;">
+                    </div>
+                    <div class="form-group">
+                        <label>Model *</label>
+                        <input type="text" name="model" id="editModel" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Device Type *</label>
+                        <select name="deviceType" id="editDeviceType" class="form-control" required>
+                            <option th:each="dt : ${deviceTypes}" th:value="${dt}" th:text="${dt.name()}">LAPTOP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status *</label>
+                        <select name="status" id="editStatus" class="form-control" required>
+                            <option th:each="st : ${statuses}" th:value="${st}" th:text="${st.name()}">AVAILABLE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Campus Location *</label>
+                        <select name="campusLocation" id="editCampus" class="form-control" required>
+                            <option th:each="cp : ${campuses}" th:value="${cp}" th:text="${#strings.replace(cp.name(), '_', ' ')}">PADUKKA_MAIN</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <input type="text" name="department" id="editDepartment" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Specific Location</label>
+                        <input type="text" name="specificLocation" id="editLocation" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Update Asset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

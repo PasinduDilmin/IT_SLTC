@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Asset Dossier - ' + ${asset.assetTag})}"></head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside th:replace="~{fragments/layout :: sidebar('assets')}"></aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <!-- Top Navbar -->
+        <header th:replace="~{fragments/layout :: navbar('Asset Dossier • ' + ${asset.assetTag})}"></header>
+
+        <div class="content-area">
+            <!-- Alert Toasts -->
+            <div th:replace="~{fragments/layout :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-heading">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <a th:href="@{/assets}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Back to Assets</a>
+                        <span th:if="${asset.status.name() == 'AVAILABLE'}" class="badge badge-available">Available</span>
+                        <span th:if="${asset.status.name() == 'ACTIVE'}" class="badge badge-active">Active</span>
+                        <span th:if="${asset.status.name() == 'TRANSFER'}" class="badge badge-transfer">On Loan</span>
+                        <span th:if="${asset.status.name() == 'QUARANTINE_EXAM'}" class="badge badge-quarantine">Exam Quarantine</span>
+                        <span th:if="${asset.status.name() == 'NOT_WORKING'}" class="badge badge-faulty">Not Working</span>
+                    </div>
+                    <h2 th:text="${asset.assetTag + ' • ' + asset.model}">NEX-LP-BAIT01 • Acer Aspire Go 14</h2>
+                    <p style="font-family: var(--font-mono); font-size: 13px; color: var(--cyan);" th:text="'Hardware Serial: ' + ${asset.serialNumber}">Hardware Serial: NXJ0LSG00243403CC62N00</p>
+                </div>
+                <div class="page-actions">
+                    <a th:href="@{/handovers}" class="btn btn-primary">
+                        <i class="fa-solid fa-signature"></i> Custody Transfer
+                    </a>
+                </div>
+            </div>
+
+            <!-- Asset Details Grid -->
+            <div class="dashboard-row">
+                <!-- Col 1: Hardware Specifications -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-microchip"></i>
+                            <span>Hardware Architecture & Specifications</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Processor</span>
+                                <span class="detail-val" th:text="${asset.processor != null ? asset.processor : 'Not Specified'}">Intel Core i3-N305</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Memory (RAM)</span>
+                                <span class="detail-val" th:text="${asset.ram != null ? asset.ram : 'Not Specified'}">8GB LPDDR5 4800MHz</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Storage Capacity</span>
+                                <span class="detail-val" th:text="${asset.storage != null ? asset.storage : 'Not Specified'}">512GB PCIe NVMe</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Operating System</span>
+                                <span class="detail-val" th:text="${asset.operatingSystem != null ? asset.operatingSystem : 'Not Specified'}">Win 11 Pro Edu Image</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Device Classification</span>
+                                <span class="detail-val" th:text="${asset.deviceType}">LAPTOP</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Carry Bag Assigned</span>
+                                <span class="detail-val" th:text="${asset.hasBag ? 'Yes, SLTC Padded Sleeve Included' : 'No Sleeve'}">No Sleeve</span>
+                            </div>
+                            <div class="detail-item" th:if="${asset.batteryHealthPercent != null}">
+                                <span class="detail-label">Battery Health Condition</span>
+                                <span class="detail-val" th:text="${asset.batteryHealthPercent} + '% (' + ${asset.batteryHealthCycle} + ' cycles)'">98.4% (14 cycles)</span>
+                            </div>
+                            <div class="detail-item" th:if="${asset.ipAddress != null}">
+                                <span class="detail-label">Network IPv4 Address</span>
+                                <span class="detail-val font-mono" th:text="${asset.ipAddress}">10.20.14.101</span>
+                            </div>
+                        </div>
+
+                        <div th:if="${asset.notes != null}" style="margin-top: 20px; padding: 14px; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); border-left: 3px solid var(--cyan);">
+                            <span class="detail-label">Technician Notes</span>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" th:text="${asset.notes}">Notes content</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Col 2: Custody & Location Status -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>Campus Deployment & Custody</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="detail-item">
+                            <span class="detail-label">Campus Facility</span>
+                            <span class="detail-val" th:text="${#strings.replace(asset.campusLocation.name(), '_', ' ')}">PADUKKA MAIN</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Room / Depository Location</span>
+                            <span class="detail-val" th:text="${asset.specificLocation != null ? asset.specificLocation : 'Depository Vault'}">IT Depository Vault (Padukka)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Department</span>
+                            <span class="detail-val" th:text="${asset.department != null ? asset.department : 'General University'}">IT Dept</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Current Custodian</span>
+                            <span class="detail-val" style="color: var(--cyan); font-weight: 600;" th:text="${asset.currentCustodian}">Unassigned (Depository)</span>
+                        </div>
+                        <div class="detail-item" th:if="${asset.previousCustodian != null}">
+                            <span class="detail-label">Previous Custodian</span>
+                            <span class="detail-val" th:text="${asset.previousCustodian}">Previous User</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Antivirus Protection</span>
+                            <span class="detail-val">
+                                <span th:if="${asset.antivirusStatus != null && asset.antivirusStatus.name() == 'ACTIVATED'}" class="badge badge-available">
+                                    <i class="fa-solid fa-shield"></i> Kaspersky Activated
+                                </span>
+                                <span th:if="${asset.antivirusStatus != null && asset.antivirusStatus.name() == 'NOT_ACTIVATED'}" class="badge badge-faulty">
+                                    Inactive
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Last Database Sync</span>
+                            <span class="detail-val font-mono" style="font-size: 12px; color: var(--text-muted);" th:text="${asset.updatedAt != null ? asset.updatedAt : asset.createdAt}">2026-10-19</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custody Handover History for this Asset -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-receipt"></i>
+                        <span>Custody Audit Logs & Loan History</span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Handover Date</th>
+                                <th>Custodian Name</th>
+                                <th>Email / Staff ID</th>
+                                <th>Expected Return</th>
+                                <th>Actual Return</th>
+                                <th>Accessories</th>
+                                <th>Digital Token</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="log : ${handovers}">
+                                <td th:text="${log.handoverDate}">2026-10-15</td>
+                                <td><strong style="color: #fff;" th:text="${log.custodianName}">Kavindu Senanayake</strong></td>
+                                <td>
+                                    <div th:text="${log.custodianEmail}">user@sltc.ac.lk</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);" th:text="${log.staffOrStudentId}">ID</div>
+                                </td>
+                                <td th:text="${log.expectedReturnDate}">2026-10-25</td>
+                                <td th:text="${log.actualReturnDate != null ? log.actualReturnDate : 'Pending Return'}">Pending Return</td>
+                                <td th:text="${log.accessories}">Adapter, Bag</td>
+                                <td>
+                                    <span class="crypto-token copyable" th:data-copy="${log.digitalSignToken}">
+                                        <i class="fa-solid fa-key"></i> <span th:text="${log.digitalSignToken}">TOKEN</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:if="${log.status.name() == 'ACTIVE'}" class="badge badge-transfer">On Loan</span>
+                                    <span th:if="${log.status.name() == 'RETURNED'}" class="badge badge-available">Returned</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(handovers)}">
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                    No handover custody history recorded for this unit.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

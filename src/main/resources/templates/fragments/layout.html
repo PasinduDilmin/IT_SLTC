@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SLTC-IT - Campus Enterprise IT Asset Management System">
+    <title th:text="${pageTitle != null ? pageTitle + ' • SLTC-IT' : 'SLTC-IT - Campus Enterprise IT Asset Management'}">SLTC-IT</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6.5.1 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- SLTC-IT Stylesheet -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<!-- Sidebar Fragment -->
+<aside th:fragment="sidebar(activeTab)" class="sidebar" id="sidebarNav">
+    <div class="brand-section">
+        <div class="brand-icon">
+            <i class="fa-solid fa-server"></i>
+        </div>
+        <div class="brand-info">
+            <h1>SLTC-IT</h1>
+            <span>SLTC Campus IT</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <span class="nav-label">Core Modules</span>
+        <a th:href="@{/dashboard}" class="nav-link" th:classappend="${activeTab == 'dashboard' ? 'active' : ''}" id="navDashboard">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Executive Telemetry</span>
+        </a>
+        <a th:href="@{/assets}" class="nav-link" th:classappend="${activeTab == 'assets' ? 'active' : ''}" id="navAssets">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Asset Registry</span>
+        </a>
+        <a th:href="@{/fleet}" class="nav-link" th:classappend="${activeTab == 'fleet' ? 'active' : ''}" id="navFleet">
+            <i class="fa-solid fa-laptop"></i>
+            <span>Aspire Go 14 Fleet</span>
+        </a>
+        <a th:href="@{/labs}" class="nav-link" th:classappend="${activeTab == 'labs' ? 'active' : ''}" id="navLabs">
+            <i class="fa-solid fa-desktop"></i>
+            <span>Computer Lab 01</span>
+        </a>
+        <a th:href="@{/handovers}" class="nav-link" th:classappend="${activeTab == 'handovers' ? 'active' : ''}" id="navHandovers">
+            <i class="fa-solid fa-signature"></i>
+            <span>Custody & Loans</span>
+        </a>
+
+        <span class="nav-label">Infrastructure</span>
+        <a th:href="@{/api/assets}" target="_blank" class="nav-link" id="navApi">
+            <i class="fa-solid fa-code"></i>
+            <span>REST API Endpoint</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="system-status">
+            <span class="status-dot"></span>
+            <div>
+                <strong style="color: #fff; font-size: 11px;">MySQL Active</strong>
+                <div style="font-size: 10px; color: var(--text-muted);">Port 3306 • Asia/Colombo</div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Top Navbar Fragment -->
+<header th:fragment="navbar(pageTitle)" class="top-navbar" id="topNavbar">
+    <div class="nav-left">
+        <span class="page-title-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span th:text="${pageTitle}">Executive Dashboard</span>
+        </span>
+    </div>
+
+    <div class="nav-right">
+        <div class="header-meta">
+            <div class="campus-pill">
+                <i class="fa-solid fa-building-columns" style="color: var(--cyan);"></i>
+                <span>SLTC Padukka & Trace City</span>
+            </div>
+            <div class="campus-pill" style="border-color: rgba(99, 102, 241, 0.4);">
+                <i class="fa-solid fa-database" style="color: var(--primary);"></i>
+                <span style="font-family: var(--font-mono); font-size: 11px;">nexusitam_db</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Alert Toasts Fragment -->
+<div th:fragment="alerts" class="toast-container" id="toastContainer">
+    <div th:if="${successMessage}" class="alert alert-success" role="alert" id="successToast">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-circle-check"></i>
+            <span th:text="${successMessage}">Operation completed successfully.</span>
+        </div>
+        <button type="button" class="alert-close" aria-label="Close">&times;</button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert" id="errorToast">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span th:text="${errorMessage}">An error occurred during operation.</span>
+        </div>
+        <button type="button" class="alert-close" aria-label="Close">&times;</button>
+    </div>
+</div>
+
+</body>
+</html>
